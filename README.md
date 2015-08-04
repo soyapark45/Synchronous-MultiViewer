@@ -9,6 +9,5 @@ Biomedical research often involves a heavy data analysis of comparing different 
 test
 
 ##Reference
-test
 * SyncWindows: https://github.com/imagej/imagej1/blob/master/ij/plugin/frame/SyncWindows.java
 * Orthogonal_Views: https://github.com/imagej/imagej1/blob/master/ij/plugin/Orthogonal_Views.java
