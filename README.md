@@ -3,7 +3,7 @@ Soya Park <soya@kaist.ac.kr>, Massachusetts General Hospital / Vakoc Group
 
 A plugin for [ImageJ](http://imagej.nih.gov/ij/)/[Fiji](http://fiji.sc/) for Synchronous Viewer for Efficient Analysis of Biomedical Applications.
 
-Biomedical research often involves a heavy data analysis of comparing different volume stacks from the sample. Identifying temporal changes of the sample in a longitudinal study or comparing different contrast that complements one another are examples of such procedures, where a synchronous visualizaFon tool is essential for efficient analysis of three dimensional datasets.
+Biomedical research often involves a heavy data analysis of comparing different volume stacks from the sample. Identifying temporal changes of the sample in a longitudinal study or comparing different contrast that complements one another are examples of such procedures, where a synchronous visualization tool is essential for efficient analysis of three dimensional datasets.
 
 This plug-in is for a synchronous view of multiple images and their cross-sectional views.
 It supports the synchronizing of the cursor, location of window & magnification. 
