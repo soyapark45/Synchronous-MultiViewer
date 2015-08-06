@@ -43,16 +43,16 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
     private int cntImageOpen = 0 ;
     private boolean imageScaled = true,imageArranged = true;
 
-    private boolean rgb;
+	private boolean rgb;
 
     private Map<Integer, ImageProcessor> fp1, fp2;
     private int preViousWidth, preViousHeight;
     private int prevX, prevY, prevSlice;
     private boolean preViousOpened = false;
 
-    private double ax, ay, az;
+	private double ax, ay, az;
 
-    private int xyX, xyY;
+	private int xyX, xyY;
     private Calibration cal=null, cal_xz=new Calibration(), cal_yz=new Calibration();
     private double magnification = 1.0;
     private Color color = Roi.getColor();
@@ -69,7 +69,7 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
         int slice = -1;
     }
 
-    public void run(String arg) {
+	public void run(String arg) {
         /* Before start, make sure user is using proper imageJ. */
         if(!checkVersion())
             return;
@@ -201,16 +201,13 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
                 bSyncAll.setLabel("Images are synced");
             }
         };
-    }
+	}
 
     /**
     *   @method Put xz and yz images sticking to xy images 
     */
     private void arrangeWindows(int id) {
         ImagePlus imp = imageMap.get(id);
-        ImagePlus xz_image = xzMap.get(id);
-        ImagePlus yz_image = yzMap.get(id);
-
         ImageWindow xyWin = imp.getWindow();
         ImageCanvas canvas = xyWin.getCanvas();
         
@@ -228,22 +225,34 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
         if (imageArranged || ((xyX!=loc.x)||(xyY!=loc.y))) {
             xyX =  loc.x;
             xyY =  loc.y;
-            ImageWindow yzWin =null;
-            long start = System.currentTimeMillis();
-            while (yzWin==null && (System.currentTimeMillis()-start)<=2500L) {
-                yzWin = yz_image.getWindow();
-                if (yzWin==null) IJ.wait(50);
+
+            long start;
+            if(yzMap.containsKey(id)) {
+                ImagePlus yz_image = yzMap.get(id);
+                ImageWindow yzWin =null;
+                start = System.currentTimeMillis();
+                while (yzWin==null && (System.currentTimeMillis()-start)<=2500L) {
+                    yzWin = yz_image.getWindow();
+                    if (yzWin==null) IJ.wait(50);
+                }
+                if (yzWin!=null)
+                    yzWin.setLocation(xyX+xyWin.getWidth(), xyY);
             }
-            if (yzWin!=null)
-                yzWin.setLocation(xyX+xyWin.getWidth(), xyY);
-            ImageWindow xzWin =null;
-            start = System.currentTimeMillis();
-            while (xzWin==null && (System.currentTimeMillis()-start)<=2500L) {
-                xzWin = xz_image.getWindow();
-                if (xzWin==null) IJ.wait(50);
+
+            if(xzMap.containsKey(id)) {
+                ImagePlus xz_image = xzMap.get(id);
+                ImageWindow xzWin =null;
+                start = System.currentTimeMillis();
+
+
+                while (xzWin==null && (System.currentTimeMillis()-start)<=2500L) {
+                    xzWin = xz_image.getWindow();
+                    if (xzWin==null) IJ.wait(50);
+                }
+                if (xzWin!=null)
+                    xzWin.setLocation(xyX,xyY+xyWin.getHeight());
             }
-            if (xzWin!=null)
-                xzWin.setLocation(xyX,xyY+xyWin.getHeight());
+            
         }
     }
 
@@ -675,53 +684,60 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
     private void updateMagnification(int id, int x, int y) {
         ImagePlus imp = imageMap.get(id);
         ImageWindow win = imp.getWindow();
-
-        ImagePlus xz_image = xzMap.get(id);
-        ImagePlus yz_image = yzMap.get(id);
-
-        double magnification= win.getCanvas().getMagnification();
+        
         int z = imp.getSlice()-1;
-
-        ImageWindow xz_win = xz_image.getWindow();
-        if (xz_win==null) return;
-        ImageCanvas xz_ic = xz_win.getCanvas();
-        double xz_mag = xz_ic.getMagnification();
         double arat = az/ax;
         int zcoord=(int)(arat*z);
-        if (flipXZ) zcoord=(int)(arat*(imp.getNSlices()-z));
-        while (xz_mag<magnification) {
-            xz_ic.zoomIn(xz_ic.screenX(x), xz_ic.screenY(zcoord));
-            xz_mag = xz_ic.getMagnification();
-        }
-        while (xz_mag>magnification) {
-            xz_ic.zoomOut(xz_ic.screenX(x), xz_ic.screenY(zcoord));
-            xz_mag = xz_ic.getMagnification();
+        double magnification= win.getCanvas().getMagnification();
+
+        if(xzMap.containsKey(id)) {
+            ImagePlus xz_image = xzMap.get(id);
+
+        
+            ImageWindow xz_win = xz_image.getWindow();
+            if (xz_win==null) return;
+            ImageCanvas xz_ic = xz_win.getCanvas();
+            double xz_mag = xz_ic.getMagnification();
+            
+            if (flipXZ) zcoord=(int)(arat*(imp.getNSlices()-z));
+            while (xz_mag<magnification) {
+                xz_ic.zoomIn(xz_ic.screenX(x), xz_ic.screenY(zcoord));
+                xz_mag = xz_ic.getMagnification();
+            }
+            while (xz_mag>magnification) {
+                xz_ic.zoomOut(xz_ic.screenX(x), xz_ic.screenY(zcoord));
+                xz_mag = xz_ic.getMagnification();
+            }
         }
 
-        ImageWindow yz_win = yz_image.getWindow();
-        if (yz_win==null) return;
-        ImageCanvas yz_ic = yz_win.getCanvas();
-        double yz_mag = yz_ic.getMagnification();
-        zcoord = (int)(arat*z);
-        while (yz_mag<magnification) {
-            //IJ.log(magnification+"  "+yz_mag+"  "+zcoord+"  "+y+"  "+x);
-            yz_ic.zoomIn(yz_ic.screenX(zcoord), yz_ic.screenY(y));
-            yz_mag = yz_ic.getMagnification();
+        if(yzMap.containsKey(id)) {
+            ImagePlus yz_image = yzMap.get(id);
+            ImageWindow yz_win = yz_image.getWindow();
+            if (yz_win==null) return;
+            ImageCanvas yz_ic = yz_win.getCanvas();
+            double yz_mag = yz_ic.getMagnification();
+            zcoord = (int)(arat*z);
+            while (yz_mag<magnification) {
+                //IJ.log(magnification+"  "+yz_mag+"  "+zcoord+"  "+y+"  "+x);
+                yz_ic.zoomIn(yz_ic.screenX(zcoord), yz_ic.screenY(y));
+                yz_mag = yz_ic.getMagnification();
+            }
+            while (yz_mag>magnification) {
+                yz_ic.zoomOut(yz_ic.screenX(zcoord), yz_ic.screenY(y));
+                yz_mag = yz_ic.getMagnification();
+            }
         }
-        while (yz_mag>magnification) {
-            yz_ic.zoomOut(yz_ic.screenX(zcoord), yz_ic.screenY(y));
-            yz_mag = yz_ic.getMagnification();
-        }
+        
     }
 
     /**
     *   @method update views for given xy image based on the cliked point.
     */
-    private void updateViews(int id, Point p) {
+	private void updateViews(int id, Point p) {
         ImagePlus imp = imageMap.get(id);
         ImageProcessor f2 = fp2.get(id);
 
-        ImageStack is = imp.getStack();
+		ImageStack is = imp.getStack();
 
         if (fp1.get(id) ==null) return;
 
@@ -1009,10 +1025,10 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
     public void componentShown(ComponentEvent e) {
     }
 
-    public  void adjustmentValueChanged(AdjustmentEvent e) {
+	public  void adjustmentValueChanged(AdjustmentEvent e) {
     }
 
-    public void imageClosed(ImagePlus imp) {
+	public void imageClosed(ImagePlus imp) {
         //imp.getWindow().removeComponentListener(this);
         Iterator<Map.Entry<Integer, ImagePlus>> entries;
 
@@ -1049,7 +1065,7 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
                 }
             }
         }
-    }
+	}
 
     public void imageOpened(ImagePlus imp) {
     }
@@ -1071,7 +1087,7 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
         prevY = crossLoc.y;
     }
 
-    public void mouseClicked(MouseEvent e) {
+	public void mouseClicked(MouseEvent e) {
     }
 
     public void mouseMoved(MouseEvent e) {
@@ -1085,11 +1101,11 @@ public class Simultaneous_MultiViewer implements PlugIn, MouseListener, MouseMot
 
     public void mouseExited(MouseEvent e) {
     }   
-    
-    public void mouseReleased(MouseEvent e) {
-    }
+	
+	public void mouseReleased(MouseEvent e) {
+	}
 
-    public void mousePressed(MouseEvent e) {
+	public void mousePressed(MouseEvent e) {
         ImageCanvas ic = (ImageCanvas) e.getSource();
         Iterator<Map.Entry<Integer, ImagePlus>> entries;
 
