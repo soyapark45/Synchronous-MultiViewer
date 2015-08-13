@@ -9,6 +9,7 @@ This plug-in is for a synchronous view of multiple images and their cross-sectio
 It supports the synchronizing of the cursor, location of window & magnification. 
 Users are allowed to open at most three stacks. 
 
+![alt tag](https://cloud.githubusercontent.com/assets/3036721/9263822/42c415f4-41d5-11e5-85bb-c1ced601076a.jpg)
 ##Installation
 1. Move the .java file to the directory ImageJ/plugins
 2. Open the .java file in ImageJ
